@@ -1,58 +1,51 @@
-## Docker MongoShell
+## Docker node-exporter
 
-`3.4.10`, `3.4`, `3`, `latest` ([Dockerfile](https://github.com/samsao/mongo-shell/blob/develop/Dockerfile))
+`0.15.2`, `0.15`, `latest` ([Dockerfile](https://github.com/samsao/Dockerfiles/blob/develop/node-exporter/Dockerfile))
 
 ## Source
 
-The repository is on GitHub @ [samsao/mongo-shell](https://github.com/samsao/mongo-shell).
+The repository is on GitHub @ [samsao/Dockerfiles](https://github.com/samsao/Dockerfiles).
 
 ## Usage
 
-### Host
+The container expects that a file `/etc/nodename` exists on the container to
+start running correctly. This is usually map from `/etc/hostname` on Unix system.
 
-Simply launch the container, connecting it to your host network, by default it will try to connect to a MongoDB instance running reachable at `localhost:27017`:
-
-```
-docker run --rm -it --net host samsao/mongo-shell:3.4
-```
-
-To provide to which port and host to connect to, specify `MONGO_HOST` and `MONGO_PORT`
-environment variables:
+Here a sample service definition for a Docker Swarm definition file:
 
 ```
-docker run --rm -it --net host -e MONGO_HOST=db -e MONGO_PORT=37017 samsao/mongo-shell:3.4
+  node-exporter:
+    image: samsao/node-exporter:0.15.2
+    environment:
+      - NODE_ID={{.Node.ID}}
+    ports:
+      - 9100:9100
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - ${HOSTNAME_FILE:-/etc/hostname}:/etc/nodename
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/etc/node-exporter/'
+    deploy:
+      mode: global
 ```
 
-### Container
-
-To connect to a database that is reachable on a particular Docker network, specify the container id that has access to the MongoDB instance instead of `--net host` (assume MongoDB hostname on this network is `db`):
+**Mac OS X** On Mac OS X, the `/etc/hostname` first does not exist but also can simply not be bind mount in a container due to restrictions of the micro-vm used to run container. To overcome that, before deploying your stack, simply specify the `HOSTNAME_FILE` variable to point to a custom file containing the node hostname (like `/tmp/hostname`):
 
 ```
-docker run --rm -it --net container:<container_id> -e MONGO_HOST=db samsao/mongo-shell:3.4
+$ cat /tmp/hostname
+macbook-pro
+$ HOSTNAME_FILE=/tmp/hostname docker stack deploy ...
 ```
 
 ## Environments
 
 Available environment variables, default values and usage:
 
- * `MONGO_HOST` (Default: `localhost`)
+ * `NODE_ID` (Default: `<empty>`)
 
-   Pass as value of `--host <value>` parameter.
-
- * `MONGO_PORT` (Default: `27017`)
-   
-   Pass as value of `--port <value>` parameter.
-
- * `MONGO_USERNAME` (Default: `<Empty>`)
-
-   Pass as value of `--username <value>` parameter, argument not pass if empty.
-
- * `MONGO_PASSWORD` (Default: `<Empty>`)
-
-   Pass as value of `--password <value>` parameter, argument not pass if empty.
-
- * `MONGO_EXTRA_PARAMETERS` (Default: `<Empty>`)
-
-   Pass as-is to `/usr/bin/mongo` binary.
-
-**Note** Shell escaping and similar problems can occurs when using `MONGO_EXTRA_PARAMETERS`. I did not tested thoroughly all and every possible use cases. As such, don't hesitate to report an issue. I will be happy to show you how you can debug and track the issue. But there is little chances I do the fix myself.
+   Pass the node id to the startup script.
