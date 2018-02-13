@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -e
+
+root_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../.. && pwd )"
+project_dir=$root_dir/node-exporter
+
+source $root_dir/bin/helpers
+
+id=samsao/node-exporter
+name="Node Exporter"
+
+major_version=0
+minor_version=15
+patch_version=2
+full_version="${major_version}.${minor_version}.${patch_version}"
+
+echo "Starting building ${name} (${full_version}) Docker image"
+execute_in_dir "$project_dir" "docker build \
+  -t ${id}:${major_version}.${minor_version} \
+  -t ${id}:${full_version} \
+  -t ${id}:latest \
+  .
+"
