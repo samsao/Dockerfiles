@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+root_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../.. && pwd )"
+
+name="php-fpm"
+id=samsao/${name}
+project_dir=$root_dir/${name}
+
+source $root_dir/bin/helpers
+
+major_version=7
+minor_version=2
+full_version="${major_version}.${minor_version}"
+
+echo "Starting building '${name}' (${full_version}) Docker image"
+execute_in_dir "$project_dir" "docker build \
+  -t ${id}:${full_version} \
+  -t ${id}:latest \
+  .
+"
