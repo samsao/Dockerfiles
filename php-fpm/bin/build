@@ -6,16 +6,30 @@ root_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../.. && pwd )"
 name="php-fpm"
 id=samsao/${name}
 project_dir=$root_dir/${name}
+file="$project_dir/Dockerfile"
+tag=$1
 
+# Sourcing here to ensure dependent variables are set (`project_dir` for example)
 source $root_dir/bin/helpers
 
 major_version=7
 minor_version=2
 full_version="${major_version}.${minor_version}"
+latest_version="latest"
+
+# Customization when tag is passed
+if [[ $tag != "" ]]; then
+  file="$file.$tag"
+  full_version="${full_version}-${tag}"
+  latest_version="${latest_version}-${tag}"
+fi
+
+ensure_dockerfile $tag
 
 echo "Starting building '${name}' (${full_version}) Docker image"
-execute_in_dir "$project_dir" "docker build \
+execute_in_project "docker build \
   -t ${id}:${full_version} \
-  -t ${id}:latest \
+  -t ${id}:${latest_version} \
+  -f ${file} \
   .
 "

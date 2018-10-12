@@ -1,3 +1,10 @@
+##
+# **Note**
+#
+# Expects the `project_dir` environment variable to be defined in the
+# sourcing script via a variable definition.
+#
+
 # Usage: execute_in_dir directory command [arguments...]
 #
 # Execute the command and it's argument into the specified directory.
@@ -12,4 +19,48 @@ execute_in_dir() {
   popd > /dev/null
 
   return $statusCode
+}
+
+# Usage: execute_in_project command [arguments...]
+#
+# Execute the command and in the project (path specified via $project_dir) into the specified directory.
+#
+execute_in_project() {
+  ensure_project_dir
+
+  execute_in_dir $project_dir $@
+}
+
+# Usage: ensure_dockerfile [tag]
+#
+# Ensure the Dockerfile in project exist, optionally specify a `tag` via first parameter
+# to check if a particular tagged file exists.
+#
+# Exit with code '3' if file does not exist.
+#
+ensure_dockerfile() {
+  ensure_project_dir
+
+  local file=$project_dir/Dockerfile
+  if [[ $1 != "" ]]; then
+    file="${file}.$1"
+  fi
+
+  if [[ ! -f $file ]]; then
+    echo "The Dockerfile '$file' should exists but does not currently"
+    exit 3
+  fi
+}
+
+# Usage: ensure_project_dir [tag]
+#
+# Ensure the '$project_dir' variable is set to something correct.
+#
+# Exit with code '2' if it's not the case.
+#
+ensure_project_dir() {
+  if [[ $project_dir == "" ]]; then
+    echo "The '\$project_dir' variable must be set before using this function"
+    exit 2
+  fi
 }

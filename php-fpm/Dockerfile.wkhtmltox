@@ -1,0 +1,10 @@
+## Base Image
+
+FROM samsao/php-fpm:7.2
+
+RUN apt update && apt install -y wget
+
+RUN \
+    wget -O /tmp/wkhtmltox.deb https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb && \
+    apt install --fix-broken -y /tmp/wkhtmltox.deb && \
+    rm -rf /tmp/wkhtmltox.deb
